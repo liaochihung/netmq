@@ -112,38 +112,36 @@ ZeroMQ/NetMQ在frame的概念上工作，大多數的訊息都可以想成含有
 
 在[Message](message.md)章節有更多說明。
 
-## Patterns
-
-ZeroMQ (and therefore NetMQ) is all about patterns and building blocks. The <a href="http://zguide.zeromq.org/page:all" target="_blank">ZeroMQ guide</a> covers everything you need to know to help you with these patterns. You should make sure you read the following sections before you attempt to start work with NetMQ.
+##Pattern
+`ZeroMQ`(和`NetMQ`)都是關於模式和building blocks的。[ZeroMQ指南](http://zguide.zeromq.org/page:all)講述了所有你需要知道的知識，以幫助你應用這些模式。在你開始用NetMQ前請先確定你已讀過下列章節。
 
 + <a href="http://zguide.zeromq.org/page:all#Chapter-Sockets-and-Patterns" target="_blank">Chapter 2 - Sockets and Patterns</a>
 + <a href="http://zguide.zeromq.org/page:all#Chapter-Advanced-Request-Reply-Patterns" target="_blank">Chapter 3 - Advanced Request-Reply Patterns</a>
 + <a href="http://zguide.zeromq.org/page:all#Chapter-Reliable-Request-Reply-Patterns" target="_blank">Chapter 4 - Reliable Request-Reply Patterns</a>
 + <a href="http://zguide.zeromq.org/page:all#Chapter-Advanced-Pub-Sub-Patterns" target="_blank">Chapter 5 - Advanced Pub-Sub Patterns</a>
 
+NetMQ也提供了以NetMQ API撰寫的針對少數幾個模式的範例。你應該也能夠在看過[ZeroMQ指南](http://zguide.zeromq.org/page:all)後很簡單的改用NetMQ實作。
 
-NetMQ also has some examples of a few of these patterns written using the NetMQ APIs. Should you find the pattern you are looking for in the <a href="http://zguide.zeromq.org/page:all" target="_blank">ZeroMQ guide</a> it should be fairly easy to translate that into NetMQ usage.
-
-Here are some links to the patterns that are available within the NetMQ codebase:
+這裡有一些已用NetMQ實作的範例程式：
 
 + <a href="https://github.com/zeromq/netmq/tree/master/src/Samples/Brokerless%20Reliability%20(Freelance%20Pattern)/Model%20One" target="_blank">Brokerless Reliability Pattern - Freelance Model one</a>
 + <a href="https://github.com/zeromq/netmq/tree/master/src/Samples/Load%20Balancing%20Pattern" target="_blank">Load Balancer Patterns</a>
 + <a href="https://github.com/zeromq/netmq/tree/master/src/Samples/Pirate%20Pattern/Lazy%20Pirate" target="_blank">Lazy Pirate Pattern</a>
 + <a href="https://github.com/zeromq/netmq/tree/master/src/Samples/Pirate%20Pattern/Simple%20Pirate" target="_blank">Simple Pirate Pattern</a>
+(譯者：原文連結錯誤，可至[NetMQ Samples](https://github.com/NetMQ/Samples/tree/master/src)查看)
 
-For other patterns, the <a href="http://zguide.zeromq.org/page:all" target="_blank">ZeroMQ guide</a>
-will be your first port of call
+其餘的範例，[ZeroMQ指南](http://zguide.zeromq.org/page:all)應是你的第一選擇。
 
-ZeroMQ patterns are implemented by pairs of sockets of particular types. In other words, to understand ZeroMQ patterns you need to understand socket types and how they work together. Mostly, this just takes study; there is little that is obvious at this level.
+ZeroMQ的模式是以特定型別實作的sockets配對。換句話說，要瞭解ZeroMQ的模式，你要先知道有那些socket型別及它們如何配合。Mostly, this just takes study; there is little that is obvious at this level.
 
-The built-in core ZeroMQ patterns are:
+ZeroMQ內建的核心模式是：
 
-+ [**Request-reply**](request-response.md), which connects a set of clients to a set of services. This is a remote procedure call and task distribution pattern.
-+ [**Pub-sub**](pub-sub.md), which connects a set of publishers to a set of subscribers. This is a data distribution pattern.
-+ **Pipeline**, which connects nodes in a fan-out/fan-in pattern that can have multiple steps and loops. This is a parallel task distribution and collection pattern.
-+ **Exclusive pair**, which connects two sockets exclusively. This is a pattern for connecting two threads in a process, not to be confused with "normal" pairs of sockets.
+* [請求-回應](https://netmq.readthedocs.io/en/latest/request-response/)，將一組客戶端連線至一組服務端。這是一種遠端程序呼叫和task分佈模式。
+* [發佈-訂閱](https://netmq.readthedocs.io/en/latest/pub-sub/)，連結一組發佈者至一組訂閱者。這是一種資料分佈式模式。
+* 管線，連結在一個有多步驟及迴圈的fan-out/fan-in模式中的節點，這是一種 parallel task distribution and collection。
+* Exclusive pair，獨占式地連接兩個socket。這是一種在process中連接兩個執行緒的模式，不要和一般的socket配對混肴。
 
-These are the socket combinations that are valid for a connect-bind pair (either side can bind):
+下列是有效的connect-bind的socket合併配對(雙邊都可以bind)：
 
 + `PublisherSocket` and `SubscriberSocket`
 + `RequestSocket` and `ResponseSocket`
@@ -155,16 +153,15 @@ These are the socket combinations that are valid for a connect-bind pair (either
 + `PushSocket` and `PullSocket`
 + `PairSocket` and `PairSocket`
 
-Any other combination will produce undocumented and unreliable results, and future versions of ZeroMQ will probably return errors if you try them. You can and will, of course, bridge other socket types via code, i.e., read from one socket type and write to another.
+任何其它的配對方式會產生undocumented及不可靠的結果，ZeroMQ未來的版本可能會在你嘗試時告知錯誤。當然，你也可以使用程式橋接不同的配對，如從某種socket讀取並寫至另一種。
 
+##Options
 
-## Options
+NetMQ提供了數個會影響動作的選項。
 
-NetMQ comes with several options that will effect how things work.
+根據你使用的socket型別或你嘗試建立的拓撲，你可能發現需要設定一些ZeroMQ的選項。在NetMQ中，可透過NetMQSocket.Options屬性完成。
 
-Depending on the type of sockets you are using, or the topology you are attempting to create, you may find that you need to set some ZeroMQ options. In NetMQ this is done using the `NetMQSocket.Options` property.
-
-Here is a listing of the available properties that you may set on a `NetMQSocket`. It is hard to say exactly which of these values you may need to set, as that obviously depends entirely on what you are trying to achieve. All I can do is list the options, and make you aware of them. So here they are:
+下面是你可以在NetMQSocket.Options上設定的可用屬性的列表。很難說要設定那些值，那取決於你想要實現什麼。這邊能做的是列出選項，以讓你知道。如下所示：
 
 + `Affinity`
 + `BackLog`
@@ -193,4 +190,4 @@ Here is a listing of the available properties that you may set on a `NetMQSocket
 + `TcpKeepaliveInterval`
 + `XPubVerbose`
 
-We will not be covering all of these here, but shall instead cover them in the areas where they are used. For now just be aware that if you have read something in the <a href="http://zguide.zeromq.org/page:all" target="_blank">ZeroMQ guide</a> that mentions some option, that this is most likely the place you will need to set it/read from it.
+這裡不會講到所有選項，在用到時才會提。現在只要注意，如果你已經在[ZeroMQ指南](http://zguide.zeromq.org/page:all)中讀過某些選項，那麼這應是你需要設置/讀取的地方。

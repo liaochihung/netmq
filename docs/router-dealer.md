@@ -4,11 +4,11 @@ Router Dealer
 
 ## RouterSocket
 
-From the [ZeroMQ guide](http://zguide.zeromq.org/page:all):
+從 [ZeroMQ guide](http://zguide.zeromq.org/page:all):
 
-> The ROUTER socket, unlike other sockets, tracks every connection it has, and tells the caller about these. The way it tells the caller is to stick the connection identity in front of each message received. An identity, sometimes called an address, is just a binary string with no meaning except "this is a unique handle to the connection". Then, when you send a message via a ROUTER socket, you first send an identity frame.
->
+> ROUTER socket，不像其它的sockets，會追蹤它的每個連線，且告知caller。告知的方式是透過在收到的訊息的前面加上一連線示別的資訊。示別碼，有時也被稱為位址，只是一個表示“這是代表此連線的唯一示別碼”，而不包含任何其它資訊。然後，當你透過ROUTER socket傳送訊息時，你會傳送一個示別碼的frame。
 > When receiving messages a ZMQ_ROUTER socket shall prepend a message part containing the identity of the originating peer to the message before passing it to the application. Messages received are fair-queued from among all connected peers. When sending messages a ZMQ_ROUTER socket shall remove the first part of the message and use it to determine the identity of the peer the message shall be routed to.
+> 當
 >
 > Identities are a difficult concept to understand, but it's essential if you want to become a ZeroMQ expert. The ROUTER socket invents a random identity for each connection with which it works. If there are three REQ sockets connected to a ROUTER socket, it will invent three random identities, one for each REQ socket.
 
