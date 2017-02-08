@@ -120,28 +120,23 @@ NetMQ提供了幾個使用InProc的組件，例如[Actor模型](actor.md)和Devi
 
 ## PGM
 
-Pragmatic General Multicast (PGM) is a reliable multicast transport protocol for applications that require ordered
-or unordered, duplicate-free, multicast data delivery from multiple sources to multiple receivers.
+Pragmatic General Multicast (PGM)是一種可靠的多播傳輸協定，用於需要有序、無序、不重覆等可從多個來源至多個接收者的多播數據。
 
-PGM guarantees that a receiver in the group either receives all data packets from transmissions and repairs, or
-is able to detect unrecoverable data packet loss. PGM is specifically intended as a workable solution for multicast
-applications with basic reliability requirements. Its central design goal is simplicity of operation with due
-regard for scalability and network efficiency.
+PGM保證群組中的接收者可接收來自不管是傳送或修復，或可偵測無法復原的資料封包的遺失。PGM被設計為一個擁有基本的可靠度需求的解決方案。它的中心設計目標是操作的簡易性且保證其彈性及網路效率。
 
-To use PGM with NetMQ, we do not have to do too much. We just need to follow these three pointers:
+要使用NetMQ的PGM，我們不用做太多，只須遵循下列三點：
 
-1. The socket types are now `PublisherSocket` and `SubscriberSocket`
-   which are talked about in more detail in the [pub-sub pattern](pub-sub.md) documentation.
-2. Make sure you are running the app as "Administrator"
-3. Make sure you have turned on the "Multicasting Support". You can do that as follows:
+1. Sockets型別現在是`PublisherSocket` and `SubscriberSocket`，在[pub-sub pattern](pub-sub.md)會有更詳細的介紹。
+2. 確定你以"Administrator"等級執行軟體。
+3. 確定已打開"Multicastng Support"，可依下列方式：
 
 ![](Images/PgmSettingsInWindows.png)
 
 ### Example
 
-Here is a small demo that use PGM, as well as `PublisherSocket` and `SubscriberSocket` and a few option values.
+這裡是一個使用PGM的小範例，以及`PublisherSocket` and `SubscriberSocket`和幾個選項值。
 
-    :::csharp
+```csharp
     const int MegaBit = 1024;
     const int MegaByte = 1024;
     using (var pub = new PublisherSocket())
@@ -169,26 +164,25 @@ Here is a small demo that use PGM, as well as `PublisherSocket` and `SubscriberS
         Console.WriteLine("sub1 received = '{0}'", sub1.ReceiveString(out more));
         Console.WriteLine("sub2 received = '{0}'", sub2.ReceiveString(out more));
     }
+```
 
-Which when run gives the following sort of output:
-
-    :::text
+執行後輸出如下：
+```dos
     Server sending 'Hi'
     sub1 received = 'Hi'
     sub2 received = 'Hi'
-
+```
 
 ### Address format
 
-Notice the format of the address string passed to `Bind()` and `Connect()`. For InProc connections, it will resemble:
+注意傳入`Bind()` and `Connect()`的字串位址格式，對InProc連線來說，會類似：
 
-    :::text
-    pgm://224.0.0.1:5555
+* pgm://224.0.0.1:5555
 
-This is made up of three parts:
+它以三個部份組成：
 
-1. The protocol (`pgm`)
-2. The host (an IP address such as `244.0.0.1`, host name, or the wildcard `*` to match any)
-3. The port number (`5555`)
+1. 協定(`pgm`)
+2. 主機(如`244.0.0.1`之類的IP位址，主機名稱，或萬用字元`*`的匹配)
+3. Port number(`5555`)
 
-Another good source for PGM information is NetMQ's [PGM unit tests](https://github.com/zeromq/netmq/blob/master/src/NetMQ.Tests/PgmTests.cs).
+另外的好PGM資訊是[PGM unit tests](https://github.com/zeromq/netmq/blob/master/src/NetMQ.Tests/PgmTests.cs).
