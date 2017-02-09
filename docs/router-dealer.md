@@ -1,16 +1,11 @@
-Router Dealer
-=====
-
-
 ## RouterSocket
 
 從 [ZeroMQ guide](http://zguide.zeromq.org/page:all):
 
 > ROUTER socket，不像其它的sockets，會追蹤它的每個連線，且告知caller。告知的方式是透過在收到的訊息的前面加上一連線示別的資訊。示別碼，有時也被稱為位址，只是一個表示“這是代表此連線的唯一示別碼”，而不包含任何其它資訊。然後，當你透過ROUTER socket傳送訊息時，你會傳送一個示別碼的frame。
-> When receiving messages a ZMQ_ROUTER socket shall prepend a message part containing the identity of the originating peer to the message before passing it to the application. Messages received are fair-queued from among all connected peers. When sending messages a ZMQ_ROUTER socket shall remove the first part of the message and use it to determine the identity of the peer the message shall be routed to.
-> 當
+> 當接收訊息時，一個ZMQ_ROUTER socket應在傳送至應用程式前，在訊息前置一個包含原始節點的辨視碼，收到的訊息會公平地將所有節點的訊息放至佇列中。當傳送訊息時，一個ZMQ_ROUTER socket應該將訊息的第一個部份移除，並使用目的端的辨視碼取代。
 >
-> Identities are a difficult concept to understand, but it's essential if you want to become a ZeroMQ expert. The ROUTER socket invents a random identity for each connection with which it works. If there are three REQ sockets connected to a ROUTER socket, it will invent three random identities, one for each REQ socket.
+> Identities是一個很難的概念，但如果你想成為一個ZeroMQ的專家，它是至關重要的。ROUTER socket會為它的每一個連線隨機產生一個辨視碼。如果有三個REQ socket連線至一個ROUTER socket上，它會產生三個辨視碼，對映至每一個REQ socket上。
 
 所以我們來看一個較小的範例，我們有一個`DealerSocket`，帶有一個3 byte的示別碼"ABC"，在內部，這表示`RouterSocket`型別的socket內保有一個hash table，它可以搜尋"ABC"，並找到這一個`DealerSocket`的TCP連線。
 
@@ -23,18 +18,17 @@ Router Dealer
 
 From [ZeroMQ guide, Identities and Addresses](http://zguide.zeromq.org/page:all#Identities-and-Addresses):
 
-> The identity concept in ZeroMQ refers specifically to ROUTER sockets and how they identify the connections they have to other sockets. More broadly, identities are used as addresses in the reply envelope. In most cases, the identity is arbitrary and local to the ROUTER socket: it's a lookup key in a hash table. Independently, a peer can have an address that is physical (a network endpoint like "tcp://192.168.55.117:5670") or logical (a UUID or email address or other unique key).
+> ZeroMQ中的辨視碼概念特指的是ROUTER sockets，以及它們如何辨別與其它socket的連線。更廣泛的說，辨視碼被當作為回信的地址。大多狀況下，辨視碼是arbitrary且在本地對映至ROUTER socket上：它是一個雜湊表中的查詢鍵。所以一個節點可以有一個實體的位址(如"tcp://192.168.55.117:5670"的網路端點)或邏輯上的位址(一個UUID或是email或其它的唯一鍵值)。
 >
-> An application that uses a ROUTER socket to talk to specific peers can convert a logical address to an identity if it has built the necessary hash table. Because ROUTER sockets only announce the identity of a connection (to a specific peer) when that peer sends a message, you can only really reply to a message, not spontaneously talk to a peer.
+> 一個使用ROUTER socket和特定節點溝通的應用程式，如果有建立雜湊表，就可以將一個邏輯位址轉成辨視碼。因為ROUTER socket只announce一個連線(至特定節點)的identity，當此連線傳送訊息時，你只能夠回覆，而不能自發地與之交談。
 >
-> This is true even if you flip the rules and make the ROUTER connect to the peer rather than wait for the peer to connect to the ROUTER. However you can force the ROUTER socket to use a logical address in place of its identity. The zmq_setsockopt reference page calls this setting the socket identity. It works as follows:
+> 這是事實，即時你將規則翻轉，且讓ROUTER連線至節點，而不是等待節點連線至ROUTER。然而你可以強制一個ROUTER socket使用邏輯位址來替代其identity，zmq_setsockopt說明頁呼叫這個以設定socket的identity，它的工作原理如下：
 >
-> + The peer application sets the ZMQ_IDENTITY option of its peer socket (DEALER or REQ) before binding or connecting.
-> + Usually the peer then connects to the already-bound ROUTER socket. But the ROUTER can also connect to the peer.
-> + At connection time, the peer socket tells the router socket, "please use this identity for this connection".
-> + If the peer socket doesn't say that, the router generates its usual arbitrary random identity for the connection.
-> + The ROUTER socket now provides this logical address to the application as a prefix identity frame for any messages coming in from that peer.
-> + The ROUTER also expects the logical address as the prefix identity frame for any outgoing messages.
+> * 節點應用程式在binding或connecting前設定它的節點socket(DEALER or REQ)的ZMQ_IDENTITY選項。
+> * 再來這節點會連線至already-bound的ROUTER socket上，但ROUTER也可以連線至此節點。
+> * 在連線時，節點socket會告訴router socket，“請為此連線使用這個辨視碼”。
+> * 如果節點socket沒有這樣子說，router會隨機產生一個辨視碼給此連線。
+> * ROUTER socket現在會提供一個邏輯位址給此程式，做為所有來自此節點的訊息的前置辨視碼用的frame。
 
 
 ## DealerSocket
@@ -44,22 +38,20 @@ NetMQ的`DealerSocket`不做任何特別的事情，它提供的是以完全非�
 Which if you recall was not something that other socket types could do, where the `ReceieveXXX` / `SendXXX` methods are blocking, and would also throw exceptions should you try to call
 things in the wrong order, or more than expected.
 
-
 DealerSocket的主要賣點是它的非同步能力。通常，`DealerSocket`會與`RouterSocket`結合使用，這就是為什麼我們決定將這兩種socket型別的介紹放在一起。
 
-If you want to know more details about socket combinations involving `DealerSocket`s, then as ALWAYS the guide is your friend. In particular the <a href="http://zguide.zeromq.org/page:all#toc58" target="_blank">Request-Reply Combinations</a> page of the guide may be of interest.
-
+如果你想瞭解更多包含`DealerSocket`的socket combinations，指南總是你的朋友，在指南中的這一頁<a href="http://zguide.zeromq.org/page:all#toc58" target="_blank">Request-Reply Combinations</a>你也許也感興趣。
 
 ## An example
 
-Time for an example. The best way to think of this example is summarized in the bullet points below:
+又到了範例的時間，瞭解此範例的最佳要點總結如下：
 
 * 有一個伺服器，它綁定了一個`RouterSocket`，因此會儲存傳入的請求連線的示別資訊，所以可以正確的將訊息回應至client socket。
 * 有很多個client，每個client都屬於個別執行緒，這些client的型別是`DealerSocket`，這一個client socket會提供固定的示別碼，以讓伺服端(`DealerSocket`)可以正確的回應訊息。
 
 程式碼如下：
 
-    :::csharp
+```csharp
     public static void Main(string[] args)
     {
         // NOTES
@@ -162,11 +154,12 @@ Time for an example. The best way to think of this example is summarized in the 
             Console.WriteLine("REPLY {0}", result);
         }
     }
+```
 
 執行後，輸出應如下所示：
 
 
-    :::text
+```dos
     ======================================
      OUTGOING MESSAGE TO SERVER
     ======================================
@@ -191,5 +184,6 @@ Time for an example. The best way to think of this example is summarized in the 
     Server receiving Socket : Frame[2] = client 0
     REPLY client 1 back from server 08:05:56
     REPLY client 0 back from server 08:05:56
+```
 
 記住這是非同步的程式碼，所以事件的發生順序可能不如你所預期的。
